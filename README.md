@@ -59,7 +59,7 @@ migrations/
 1 directory, 2 files
 ```
 
-You may check out the example main.go and migrations in this repository. The format of the migrations should be according to goose guidelines because goose library is used under the hood.
+You may check out the example [main.go](https://github.com/pav5000/easy-sqlite/blob/master/cmd/example/main.go) and [migrations](https://github.com/pav5000/easy-sqlite/tree/master/cmd/example/migrations) in this repository. The format of the migrations should be according to goose guidelines because goose library is used under the hood.
 
 https://github.com/pressly/goose
 
