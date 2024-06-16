@@ -87,3 +87,49 @@ No, after compiling migrations get embedded into the executable binary (with the
 When you call `easysqlite.New(...)` goose checks if there are some migrations that weren't applied yet. If there are, goose applies them. If there is no database file, it will be created and all migrations applied to it one-by-one.
 
 I think it's a good way for small apps and pet projects to apply migrations on start.
+
+## Transactions
+
+```go
+err = db.DoInTx(ctx, func(ctx context.Context) error {
+	transferAmount := 200
+	userFrom := 100
+	userTo := 101
+
+	var currentBalance int
+	err := db.GetContext(ctx, &currentBalance, `SELECT balance FROM users WHERE id=?`, userFrom)
+	if err != nil {
+		return err
+	}
+
+	if currentBalance < transferAmount {
+		return errors.New("insufficient funds")
+	}
+
+	_, err = db.ExecContext(ctx,
+		`UPDATE users SET balance=balance-? WHERE id=?`,
+		transferAmount, userFrom)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.ExecContext(ctx,
+		`UPDATE users SET balance=balance+? WHERE id=?`,
+		transferAmount, userTo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+})
+```
+
+`DoInTx` starts a transaction with LevelSerializable and commits it if provided callback function returns nil.
+If it returns any error, the transaction is rolled back.
+
+You don't need to pass tx object to query methods, they'll take the tx object from the context.
+Make sure to pass the context you got in the callback function to all query methods and use only query methods which easysqlite exports.
+
+I think using transactions this way is convenient because when you use [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) for example, it's a challenge to keep your domain layer clean of db stuff when you need transactions. When transaction is taken automagically from the context it frees yours domain layer from implementation specific imports. You can just hide `DoInTx` using an interface and call your repository methods.
+
+If you don't use clean architecture it's also convenient because you don't need to manage begins and rollbacks by hand and you won't ever forget to pass a tx object.
