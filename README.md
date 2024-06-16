@@ -126,7 +126,7 @@ err = db.DoInTx(ctx, func(ctx context.Context) error {
 })
 ```
 
-`DoInTx` starts a transaction with LevelSerializable and commits it if provided callback function returns nil.
+`DoInTx` starts a transaction with LevelSerializable and commits if the provided callback function returns nil.
 If it returns any error, the transaction is rolled back.
 
 You don't need to pass tx object to query methods, they'll take the tx object from the context.

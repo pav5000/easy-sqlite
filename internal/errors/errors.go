@@ -1,6 +1,8 @@
 // errors provides a couple of custom useful error handling functions
 // parts of the code are taken from github.com/pkg/errors
 // the pkg/errors repo is archived and deprecated so I didn't want to import it
+//
+//nolint:gochecknoglobals
 package errors
 
 import "errors"
@@ -13,17 +15,18 @@ func Wrp(err error, message string) error {
 	if err == nil {
 		return nil
 	}
-	return &withMessage{
+
+	return &wrappedError{
 		err: err,
 		msg: message,
 	}
 }
 
-type withMessage struct {
+type wrappedError struct {
 	err error
 	msg string
 }
 
-func (w *withMessage) Error() string { return w.msg + ": " + w.err.Error() }
+func (w *wrappedError) Error() string { return w.msg + ": " + w.err.Error() }
 
-func (w *withMessage) Unwrap() error { return w.err }
+func (w *wrappedError) Unwrap() error { return w.err }

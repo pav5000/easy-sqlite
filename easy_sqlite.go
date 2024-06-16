@@ -4,7 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // database driver based on side effects
 	"github.com/pav5000/easy-sqlite/internal/errors"
 	"github.com/pressly/goose/v3"
 )
@@ -18,7 +18,7 @@ type EasySqlite struct {
 // Check out the example of migrations in the cmd/example folder
 // The migration tool used here is https://github.com/pressly/goose
 func New(path string, migrations fs.FS, dirName string) (*EasySqlite, error) {
-	service, err := createDbService(path)
+	service, err := createDBService(path)
 	if err != nil {
 		return nil, errors.Wrp(err, "creating db service")
 	}
@@ -29,7 +29,7 @@ func New(path string, migrations fs.FS, dirName string) (*EasySqlite, error) {
 	}
 
 	goose.SetBaseFS(migrations)
-	err = goose.Up(service.db.DB, "migrations")
+	err = goose.Up(service.db.DB, dirName)
 	if err != nil {
 		return nil, errors.Wrp(err, "goose.Up")
 	}
@@ -37,7 +37,7 @@ func New(path string, migrations fs.FS, dirName string) (*EasySqlite, error) {
 	return service, nil
 }
 
-func createDbService(path string) (*EasySqlite, error) {
+func createDBService(path string) (*EasySqlite, error) {
 	conn, err := sqlx.Connect("sqlite3", path)
 	if err != nil {
 		return nil, errors.Wrp(err, "sql.Open")

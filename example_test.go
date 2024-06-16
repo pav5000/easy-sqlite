@@ -1,8 +1,11 @@
-package easysqlite
+//nolint:testableexamples
+package easysqlite_test
 
 import (
 	"context"
 	"embed"
+
+	easysqlite "github.com/pav5000/easy-sqlite"
 )
 
 // embeding migrations folder into executable binary
@@ -12,15 +15,15 @@ import (
 var embedMigrations embed.FS
 
 func ExampleNew() {
-	// Creating db connection
-	db, err := New("db.sqlite", embedMigrations, "migrations")
+	// Creating conn connection
+	conn, err := easysqlite.New("db.sqlite", embedMigrations, "migrations")
 	if err != nil {
 		panic(err)
 	}
 
 	// Inserting records
 	ctx := context.Background()
-	_, err = db.ExecContext(ctx, `INSERT INTO users (name,age) VALUES(?,?)`, "John", 23)
+	_, err = conn.ExecContext(ctx, `INSERT INTO users (name,age) VALUES(?,?)`, "John", 23)
 	if err != nil {
 		panic(err)
 	}
@@ -34,14 +37,14 @@ func ExampleNew() {
 
 	// Getting one row
 	var user User
-	err = db.GetContext(ctx, &user, `SELECT id,name,age FROM users WHERE id=?`, 1)
+	err = conn.GetContext(ctx, &user, `SELECT id,name,age FROM users WHERE id=?`, 1)
 	if err != nil {
 		panic(err)
 	}
 
 	// Selecting many rows
 	var users []User
-	err = db.SelectContext(ctx, &users, `SELECT id,name,age FROM users`)
+	err = conn.SelectContext(ctx, &users, `SELECT id,name,age FROM users`)
 	if err != nil {
 		panic(err)
 	}

@@ -9,25 +9,28 @@ import (
 )
 
 // DoInTx starts transaction and guarantees that all queries in easysqlite methods
-// will use it as long as you use the context provided into the callback function
-func (s *EasySqlite) DoInTx(ctx context.Context, cb func(ctx context.Context) error) error {
-	tx, err := s.db.BeginTxx(ctx, &sql.TxOptions{
+// will use it as long as you use the context provided into the callback function.
+func (s *EasySqlite) DoInTx(ctx context.Context, callback func(ctx context.Context) error) error {
+	transaction, err := s.db.BeginTxx(ctx, &sql.TxOptions{
+		ReadOnly:  false,
 		Isolation: sql.LevelSerializable,
 	})
 	if err != nil {
 		return errors.Wrp(err, "db.BeginTxx")
 	}
 
-	defer tx.Rollback()
+	defer func() {
+		_ = transaction.Rollback()
+	}()
 
 	// injecting transaction into context so all query methods will use it
-	ctx = txctx.Inject(ctx, tx)
+	ctx = txctx.Inject(ctx, transaction)
 
-	err = cb(ctx)
+	err = callback(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Commiting only if there is no error
-	return tx.Commit()
+	// Committing only if there is no error
+	return errors.Wrp(transaction.Commit(), "commit")
 }

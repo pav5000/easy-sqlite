@@ -1,3 +1,4 @@
+//nolint:wrapcheck,mnd,err113,funlen
 package main
 
 import (
@@ -15,15 +16,15 @@ import (
 var embedMigrations embed.FS
 
 func main() {
-	// Creating db connection
-	db, err := easysqlite.New("db.sqlite", embedMigrations, "migrations")
+	// Creating conn connection
+	conn, err := easysqlite.New("db.sqlite", embedMigrations, "migrations")
 	if err != nil {
 		panic(err)
 	}
 
 	// Inserting records
 	ctx := context.Background()
-	_, err = db.ExecContext(ctx, `INSERT INTO users (name,balance) VALUES(?,?)`, "John", 0)
+	_, err = conn.ExecContext(ctx, `INSERT INTO users (name,balance) VALUES(?,?)`, "John", 0)
 	if err != nil {
 		panic(err)
 	}
@@ -37,34 +38,34 @@ func main() {
 
 	// Getting one row
 	var user User
-	err = db.GetContext(ctx, &user, `SELECT id,name,balance FROM users WHERE id=?`, 1)
+	err = conn.GetContext(ctx, &user, `SELECT id,name,balance FROM users WHERE id=?`, 1)
 	if err != nil {
 		panic(err)
 	}
 
 	// Selecting many rows
 	var users []User
-	err = db.SelectContext(ctx, &users, `SELECT id,name,balance FROM users`)
+	err = conn.SelectContext(ctx, &users, `SELECT id,name,balance FROM users`)
 	if err != nil {
 		panic(err)
 	}
 
-	//Transactions
-	db.MustExecContext(ctx, `DELETE FROM users WHERE id IN(?,?)`, 100, 101)
-	db.MustExecContext(ctx,
+	// Transactions
+	conn.MustExecContext(ctx, `DELETE FROM users WHERE id IN(?,?)`, 100, 101)
+	conn.MustExecContext(ctx,
 		`INSERT INTO users (id,name,balance) VALUES(?,?,?)`,
 		100, "Sam", 400)
-	db.MustExecContext(ctx,
+	conn.MustExecContext(ctx,
 		`INSERT INTO users (id,name,balance) VALUES(?,?,?)`,
 		101, "Thomas", 100)
 
-	err = db.DoInTx(ctx, func(ctx context.Context) error {
+	err = conn.DoInTx(ctx, func(ctx context.Context) error {
 		transferAmount := 200
 		userFrom := 100
 		userTo := 101
 
 		var currentBalance int
-		err := db.GetContext(ctx, &currentBalance, `SELECT balance FROM users WHERE id=?`, userFrom)
+		err := conn.GetContext(ctx, &currentBalance, `SELECT balance FROM users WHERE id=?`, userFrom)
 		if err != nil {
 			return err
 		}
@@ -73,14 +74,14 @@ func main() {
 			return errors.New("insufficient funds")
 		}
 
-		_, err = db.ExecContext(ctx,
+		_, err = conn.ExecContext(ctx,
 			`UPDATE users SET balance=balance-? WHERE id=?`,
 			transferAmount, userFrom)
 		if err != nil {
 			return err
 		}
 
-		_, err = db.ExecContext(ctx,
+		_, err = conn.ExecContext(ctx,
 			`UPDATE users SET balance=balance+? WHERE id=?`,
 			transferAmount, userTo)
 		if err != nil {

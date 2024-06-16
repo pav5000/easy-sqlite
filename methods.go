@@ -1,3 +1,4 @@
+//nolint:wrapcheck
 package easysqlite
 
 import (
@@ -11,6 +12,7 @@ func (s *EasySqlite) ExecContext(ctx context.Context, query string, args ...any)
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.ExecContext(ctx, query, args...)
 	}
+
 	return s.db.ExecContext(ctx, query, args...)
 }
 
@@ -18,6 +20,7 @@ func (s *EasySqlite) GetContext(ctx context.Context, dest any, query string, arg
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.GetContext(ctx, dest, query, args...)
 	}
+
 	return s.db.GetContext(ctx, dest, query, args...)
 }
 
@@ -25,6 +28,7 @@ func (s *EasySqlite) SelectContext(ctx context.Context, dest any, query string, 
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.SelectContext(ctx, dest, query, args...)
 	}
+
 	return s.db.SelectContext(ctx, dest, query, args...)
 }
 
@@ -32,6 +36,7 @@ func (s *EasySqlite) PrepareContext(ctx context.Context, query string) (*sql.Stm
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.PrepareContext(ctx, query)
 	}
+
 	return s.db.PrepareContext(ctx, query)
 }
 
@@ -39,6 +44,7 @@ func (s *EasySqlite) QueryContext(ctx context.Context, query string, args ...int
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.QueryContext(ctx, query, args...)
 	}
+
 	return s.db.QueryContext(ctx, query, args...)
 }
 
@@ -46,6 +52,7 @@ func (s *EasySqlite) QueryRowContext(ctx context.Context, query string, args ...
 	if tx := txctx.Extract(ctx); tx != nil {
 		return tx.QueryRowContext(ctx, query, args...)
 	}
+
 	return s.db.QueryRowContext(ctx, query, args...)
 }
 
@@ -54,5 +61,6 @@ func (s *EasySqlite) MustExecContext(ctx context.Context, query string, args ...
 	if err != nil {
 		panic(err)
 	}
+
 	return res
 }

@@ -17,5 +17,6 @@ func Extract(ctx context.Context) *sqlx.Tx {
 	if !ok {
 		return nil
 	}
+
 	return tx
 }

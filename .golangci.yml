@@ -1,0 +1,11 @@
+linters:
+  enable-all: true
+  disable:
+    - gomnd
+    - execinquery
+    - wsl
+    - depguard
+linters-settings:
+  wrapcheck:
+    ignoreSigs:
+      - errors.Wrp(
