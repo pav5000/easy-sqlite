@@ -59,9 +59,8 @@ migrations/
 1 directory, 2 files
 ```
 
-You may check out the example [main.go](https://github.com/pav5000/easy-sqlite/blob/master/cmd/example/main.go) and [migrations](https://github.com/pav5000/easy-sqlite/tree/master/cmd/example/migrations) in this repository. The format of the migrations should be according to goose guidelines because goose library is used under the hood.
-
-https://github.com/pressly/goose
+The formatting convention used for the migrations are taken from the [goose](https://github.com/pressly/goose) library, since it's being used under the hood.
+Check out the [main.go](https://github.com/pav5000/easy-sqlite/blob/master/cmd/example/main.go) file and the [migrations](https://github.com/pav5000/easy-sqlite/tree/master/cmd/example/migrations) folder which are within this repository as a reference example
 
 The contents of a simple migration file:
 
@@ -76,17 +75,17 @@ CREATE TABLE users (
 DROP TABLE users;
 ```
 
-The `Down` clause is needed if you want to rollback your migrations in the future. My library doesn't support rollbacks yet but you can do it with goose CLI-tool.
+The Down clause is needed if you want to rollback your migrations in the future. Note: Rollbacks aren't currently supported, for the meantime if needed you can use the goose CLI-tool.
 
 ### Should I keep migration sql files near the app binary?
 
-No, after compiling migrations get embedded into the executable binary (with the help of go's [embed](https://pkg.go.dev/embed) package). So you don't need to include migration files into the deploy container along with your app. They're needed only for build.
+No, after compiling migrations get embedded into the executable binary (with the help of go's [embed](https://pkg.go.dev/embed) package). So you don't need to include migration files into the deploy container along with your app. They're needed only for the build.
 
-### When are migrations get applied?
+### When do migrations get applied?
 
-When you call `easysqlite.New(...)` goose checks if there are some migrations that weren't applied yet. If there are, goose applies them. If there is no database file, it will be created and all migrations applied to it one-by-one.
+When you call `easysqlite.New(...)` goose checks if there are any migrations that weren't applied yet. If there are, goose applies them. If there is no database file, it will be created and all migrations will be applied to it one-by-one.
 
-I think it's a good way for small apps and pet projects to apply migrations on start.
+Personally I think this a good way for small apps and pet projects to apply migrations on startup.
 
 ## Transactions
 
@@ -126,12 +125,10 @@ err = db.DoInTx(ctx, func(ctx context.Context) error {
 })
 ```
 
-`DoInTx` starts a transaction with LevelSerializable and commits if the provided callback function returns nil.
-If it returns any error, the transaction is rolled back.
+`DoInTx` initiates a transaction with LevelSerializable and commits if the provided callback function returns nil. If it returns any error, the transaction is rolled back.
 
-You don't need to pass tx object to query methods, they'll take the tx object from the context.
-Make sure to pass the context you got in the callback function to all query methods and use only query methods which easysqlite exports.
+It is unnecessary to pass the tx object to query methods; they will retrieve the tx object from the context. Ensure that the context obtained in the callback function is passed to all query methods and that only the query methods exported by easysqlite are utilized.
 
-I think using transactions this way is convenient because when you use [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) for example, it's a challenge to keep your domain layer clean of db stuff when you need transactions. When transaction is taken automagically from the context it frees yours domain layer from implementation specific imports. You can just hide `DoInTx` using an interface and call your repository methods.
+Utilizing transactions in this manner is advantageous because, for instance, when employing [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), it is challenging to maintain the domain layer free from database-specific implementations when transactions are required. When the transaction is automatically obtained from the context, it liberates the domain layer from implementation-specific imports. You can simply encapsulate DoInTx using an interface and invoke your repository methods.
 
-If you don't use clean architecture it's also convenient because you don't need to manage begins and rollbacks by hand and you won't ever forget to pass a tx object.
+Even if clean architecture is not employed, this approach remains beneficial as it eliminates the need to manually manage transaction beginnings and rollbacks, ensuring that you never forget to pass a tx object.
